@@ -95,8 +95,10 @@ UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like 
 
 def money_pairs(text):
     """卡片文本 → (现价, 原价)。
-    倍数陷阱:多件装卡片同时出现 总价(如 $34.88/10件) 和 单价(如 $3.49),
-    金额严格成 N 倍(2≤N≤24,±15% 容差)→ 判定为「总价/单价」丢弃,不是折扣。"""
+    多件装陷阱:卡片同时含 总价+单价(如 $34.88/10个、每个$3.49)时,
+    金额近整倍数且带「多件装词汇」(pack/个/件/each…)且无明确折扣词(was/原价)→ 丢弃。
+    注意:真 bug 价本身就是大整倍数(90% off = 10倍),不能只看倍数。"""
+    t = text.lower()
     raw = [float(m.replace(',', '')) for m in MONEY.findall(text)]
     vals = sorted({v for v in raw if 0.3 <= v <= 10000})
     if len(vals) < 2 or len(vals) > 8:
@@ -107,7 +109,10 @@ def money_pairs(text):
     ratio = old / price
     n = round(ratio)
     if 2 <= n <= 24 and abs(ratio - n) / n < 0.15:
-        return None, None  # 倍数关系 → 多件装的总价/单价
+        explicit_discount = re.search(r'(was|reg[.\s]|原价|原\$|市场价|list price|save)', t)
+        pack_hint = re.search(r'(pack|each|/ ?ea\b|\bct\b|pcs|件|个|支|片|盒|包)', t)
+        if pack_hint and not explicit_discount:
+            return None, None  # 多件装总价/单价
     return price, old
 
 
