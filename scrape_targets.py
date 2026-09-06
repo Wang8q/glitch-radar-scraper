@@ -94,6 +94,9 @@ UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like 
 
 
 def money_pairs(text):
+    """卡片文本 → (现价, 原价)。
+    倍数陷阱:多件装卡片同时出现 总价(如 $34.88/10件) 和 单价(如 $3.49),
+    金额严格成 N 倍(2≤N≤24,±15% 容差)→ 判定为「总价/单价」丢弃,不是折扣。"""
     raw = [float(m.replace(',', '')) for m in MONEY.findall(text)]
     vals = sorted({v for v in raw if 0.3 <= v <= 10000})
     if len(vals) < 2 or len(vals) > 8:
@@ -101,6 +104,10 @@ def money_pairs(text):
     price, old = vals[0], vals[-1]
     if price <= 0 or old / price < 3:
         return None, None
+    ratio = old / price
+    n = round(ratio)
+    if 2 <= n <= 24 and abs(ratio - n) / n < 0.15:
+        return None, None  # 倍数关系 → 多件装的总价/单价
     return price, old
 
 
