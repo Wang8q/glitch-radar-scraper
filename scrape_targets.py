@@ -46,6 +46,7 @@ TARGETS = {
         'https://www.canadiantire.ca/en/promotions/clearance.html',
         'https://www.canadiantire.ca/en/promotions/clearance.html?page=2',
         'https://www.canadiantire.ca/en/promotions/clearance.html?page=3',
+        'https://www.canadiantire.ca/en/promotions/clearance.html?page=4',
     ],
     'londondrugs': [
         # DataDome 反爬,最难啃;保留观察
@@ -55,10 +56,13 @@ TARGETS = {
         # 试试 Amazon.ca:今日 Deals + clearance 低价搜索
         'https://www.amazon.ca/gp/goldbox',
         'https://www.amazon.ca/s?k=clearance&s=price-asc-rank',
+        'https://www.amazon.ca/s?k=deals&s=price-asc-rank',
+        'https://www.amazon.ca/s?k=outlet&s=price-asc-rank',
     ],
     'simons': [
         'https://www.simons.ca/en/sale',
         'https://www.simons.ca/en/sale?page=2',
+        'https://www.simons.ca/en/sale?page=3',
     ],
     'sportinglife': [
         'https://sportinglife.ca/collections/sale',
@@ -71,15 +75,18 @@ TARGETS = {
     'aritzia': [
         'https://www.aritzia.com/en/sale',
         'https://www.aritzia.com/en/sale?page=2',
+        'https://www.aritzia.com/en/sale?page=3',
     ],
     'homehardware': [
         'https://www.homehardware.ca/en/sale',
     ],
     'uniqlo': [
         'https://www.uniqlo.com/ca/en/sale',
+        'https://www.uniqlo.com/ca/en/sale?page=2',
     ],
     'hm': [
         'https://www2.hm.com/en_ca/sale.html',
+        'https://www2.hm.com/en_ca/sale.html?page=2',
     ],
 }
 

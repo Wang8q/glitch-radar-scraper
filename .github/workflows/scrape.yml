@@ -2,7 +2,7 @@ name: glitch-radar scraper
 
 on:
   schedule:
-    - cron: '*/5 * * * *'   # 每 5 分钟一轮(公开仓库免费额度无限)
+    - cron: '* * * * *'   # 每分钟触发;有运行在跑时 GitHub 自动跳过 → 实际为「连续不断」扫描
   workflow_dispatch: {}
   push:
     branches:
@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: scrape
-  cancel-in-progress: true   # 新一轮开始时取消上一轮,始终追最新
+  cancel-in-progress: false  # 不取消在跑的轮次,让它们完整抓完
 
 jobs:
   scrape:
