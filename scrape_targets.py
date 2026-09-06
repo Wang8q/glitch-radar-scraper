@@ -38,7 +38,7 @@ TARGETS = {
         'https://www.walmart.ca/en/search?q=clearance',
     ],
     'costco': [
-        'https://www.costco.ca/CatalogSearch?dept=All&keyword=clearance',
+        'https://www.costco.ca/s?langId=-24&keyword=last+chance&sortBy=item_startDate%2Bdesc',
     ],
     'canadiantire': [
         'https://www.canadiantire.ca/en/promotions/clearance.html',
