@@ -1,0 +1,33 @@
+name: glitch-radar scraper
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # 每 30 分钟一轮,与雷达节奏一致
+  workflow_dispatch: {}       # 支持手动触发
+
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Scrapling + 隐身浏览器
+        run: |
+          pip install -U scrapling
+          scrapling install
+
+      - name: 抓取目标站并喂回雷达
+        env:
+          RADAR_URL: ${{ secrets.RADAR_URL }}
+          RADAR_KEY: ${{ secrets.RADAR_KEY }}
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+        run: python scrape_targets.py
