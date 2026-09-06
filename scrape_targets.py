@@ -181,7 +181,7 @@ def send(source, deals):
 def main():
     if not RADAR_URL or not INGEST_TOKEN:
         raise SystemExit('缺少 RADAR_URL / INGEST_TOKEN 环境变量(GitHub Secrets)')
-    total_pushed, failed = 0, 0
+    failed = 0
     for name, urls in TARGETS.items():
         try:
             deals, errors = scrape_target(name, urls)
@@ -189,7 +189,7 @@ def main():
                 failed += 1
             deals = deals[:40]
             if deals:
-                send(name, deals)
+                send(name, deals)  # 逐目标发送:即使后面超时,已抓到的数据不丢
         except Exception as e:
             print(f'[{name}] 失败: {type(e).__name__}: {str(e)[:160]}')
             failed += 1
