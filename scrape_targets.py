@@ -34,19 +34,22 @@ CARD_SELECTORS = [
 
 TARGETS = {
     'walmart': [
-        'https://www.walmart.ca/en/collection/clearance-3898',
+        # DataDome 反爬,GHA 出口大概率 307→blocked;保留观察
         'https://www.walmart.ca/en/search?q=clearance',
     ],
     'costco': [
-        'https://www.costco.ca/Clearance.html',
+        'https://www.costco.ca/CatalogSearch?dept=All&keyword=clearance',
     ],
     'canadiantire': [
-        'https://www.canadiantire.ca/en/promotional/sale.html',
+        'https://www.canadiantire.ca/en/promotions/clearance.html',
     ],
     'londondrugs': [
+        # DataDome 反爬,最难啃;保留观察
         'https://www.londondrugs.com/on-sale',
     ],
 }
+
+UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 
 
 def money_pairs(text):
@@ -186,7 +189,7 @@ def send(source, payload):
     data = json.dumps(payload).encode()
     req = urllib.request.Request(
         RADAR_URL + '/api/ingest', data=data, method='POST',
-        headers={'content-type': 'application/json', 'x-ingest-token': INGEST_TOKEN},
+        headers={'content-type': 'application/json', 'x-ingest-token': INGEST_TOKEN, 'user-agent': UA},
     )
     with urllib.request.urlopen(req, timeout=60) as r:
         print(f'[{source}] Worker 回执:', r.read().decode()[:200])
