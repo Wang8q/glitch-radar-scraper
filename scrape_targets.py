@@ -116,18 +116,29 @@ def money_pairs(text):
     return price, old
 
 
-def make_deal(text, href, base_url):
+def make_deal(text, hrefs, base_url):
     price, old = money_pairs(text)
     if price is None:
         return None
     title = html_lib.unescape(text).strip().replace('\n', ' ')
     title = re.sub(r'\s+', ' ', title)[:120]
-    if not href:
+    # 链接优选:排除广告跳转域,优先商品页(/dp/、/product/)
+    best = None
+    for href in hrefs or []:
+        if not href:
+            continue
+        u = urllib.parse.urljoin(base_url, html_lib.unescape(href).split('#')[0])
+        if not u.startswith('http'):
+            continue
+        if 'amazon-adsystem' in u or '/x/c/' in u:
+            continue
+        best = u
+        if '/dp/' in u or '/product/' in u or '/p/' in u:
+            best = u
+            break
+    if not best:
         return None
-    url = urllib.parse.urljoin(base_url, href.split('#')[0])
-    if not url.startswith('http'):
-        return None
-    return {'title': title or url, 'url': url, 'price': price, 'oldPrice': old}
+    return {'title': title or best, 'url': best, 'price': price, 'oldPrice': old}
 
 
 def strip_tags(s):
@@ -191,14 +202,12 @@ def extract_cards(page, page_url):
         if len(cards) < 4:
             continue
         for el, t in cards:
-            href = None
+            hrefs = []
             try:
-                a = el.css_first('a')
-                if a is not None:
-                    href = (a.attrib or {}).get('href')
+                hrefs = [(a.attrib or {}).get('href') for a in el.css('a')][:10]
             except Exception:
                 pass
-            d = make_deal(t, href, page_url)
+            d = make_deal(t, hrefs, page_url)
             if d and d['url'] not in seen:
                 seen.add(d['url'])
                 deals.append(d)
@@ -210,7 +219,7 @@ def extract_cards(page, page_url):
     for m in ANCHOR.finditer(html):
         href = html_lib.unescape(m.group(1))
         text = strip_tags(m.group(2))
-        d = make_deal(text, href, page_url)
+        d = make_deal(text, [href], page_url)
         if d and d['url'] not in seen:
             seen.add(d['url'])
             deals.append(d)
@@ -280,9 +289,10 @@ def main():
             failed += 1
         time.sleep(5)
 
-    # 回传诊断(雷达面板可查)
+    # 回传诊断(按目标分键,雷达面板可查;无变化不占额度)
     try:
-        send('diag', {'source': 'diag', 'deals': [], 'note': json.dumps(diag, ensure_ascii=False)})
+        send('diag', {'source': 'diag', 'target': os.environ.get('ONLY_TARGET', 'all'),
+                      'deals': [], 'note': json.dumps(diag, ensure_ascii=False)})
     except Exception as e:
         print('[diag] 回传失败:', str(e)[:160])
 
