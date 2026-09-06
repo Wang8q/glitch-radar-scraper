@@ -39,13 +39,33 @@ TARGETS = {
     ],
     'costco': [
         'https://www.costco.ca/s?langId=-24&keyword=last+chance&sortBy=item_startDate%2Bdesc',
+        'https://www.costco.ca/s?langId=-24&keyword=last+chance',
+        'https://www.costco.ca/s?langId=-24&keyword=clearance',
     ],
     'canadiantire': [
         'https://www.canadiantire.ca/en/promotions/clearance.html',
+        'https://www.canadiantire.ca/en/promotions/clearance.html?page=2',
+        'https://www.canadiantire.ca/en/promotions/clearance.html?page=3',
     ],
     'londondrugs': [
         # DataDome 反爬,最难啃;保留观察
         'https://www.londondrugs.com/on-sale',
+    ],
+    'simons': [
+        'https://www.simons.ca/en/sale',
+        'https://www.simons.ca/en/sale?page=2',
+    ],
+    'sportinglife': [
+        'https://sportinglife.ca/collections/sale',
+        'https://sportinglife.ca/collections/sale?page=2',
+    ],
+    'mec': [
+        'https://www.mec.ca/en/sale',
+        'https://www.mec.ca/en/sale?page=2',
+    ],
+    'aritzia': [
+        'https://www.aritzia.com/en/sale',
+        'https://www.aritzia.com/en/sale?page=2',
     ],
 }
 
