@@ -25,7 +25,7 @@ jobs:
 
       - name: Install Scrapling + 隐身浏览器
         run: |
-          pip install -U scrapling
+          pip install -U "scrapling[all]"
           scrapling install
 
       - name: 抓取目标站并喂回雷达
