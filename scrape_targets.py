@@ -51,6 +51,11 @@ TARGETS = {
         # DataDome 反爬,最难啃;保留观察
         'https://www.londondrugs.com/on-sale',
     ],
+    'amazon': [
+        # 试试 Amazon.ca:今日 Deals + clearance 低价搜索
+        'https://www.amazon.ca/gp/goldbox',
+        'https://www.amazon.ca/s?k=clearance&s=price-asc-rank',
+    ],
     'simons': [
         'https://www.simons.ca/en/sale',
         'https://www.simons.ca/en/sale?page=2',
@@ -66,6 +71,15 @@ TARGETS = {
     'aritzia': [
         'https://www.aritzia.com/en/sale',
         'https://www.aritzia.com/en/sale?page=2',
+    ],
+    'homehardware': [
+        'https://www.homehardware.ca/en/sale',
+    ],
+    'uniqlo': [
+        'https://www.uniqlo.com/ca/en/sale',
+    ],
+    'hm': [
+        'https://www2.hm.com/en_ca/sale.html',
     ],
 }
 
@@ -219,6 +233,10 @@ def main():
     if not RADAR_URL or not INGEST_TOKEN:
         raise SystemExit('缺少 RADAR_URL / INGEST_TOKEN 环境变量(GitHub Secrets)')
 
+    # matrix 模式:只跑指定的一个目标(GitHub Actions 并行 8-12 台机器)
+    only = os.environ.get('ONLY_TARGET', '')
+    targets = {only: TARGETS[only]} if only in TARGETS else TARGETS
+
     # 自检:隐身浏览器是否可用(与目标站无关)
     diag = {}
     try:
@@ -230,7 +248,7 @@ def main():
         print('[selftest] 失败 →', diag['selftest'])
 
     failed = 0
-    for name, urls in TARGETS.items():
+    for name, urls in targets.items():
         try:
             deals, errors = scrape_target(name, urls)
             diag[name] = f'{len(deals)} deals' + (('; ' + '; '.join(errors)[:200]) if errors else '')
@@ -249,7 +267,7 @@ def main():
     except Exception as e:
         print('[diag] 回传失败:', str(e)[:160])
 
-    print(f'完成: 目标 {len(TARGETS)} 个, 失败 {failed} 个')
+    print(f'完成: 目标 {len(targets)} 个, 失败 {failed} 个')
 
 
 if __name__ == '__main__':
