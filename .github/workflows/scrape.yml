@@ -1,16 +1,22 @@
 name: glitch-radar scraper
 
+# 节奏:自链式触发(每轮结束自动发起下一轮,轮期间 GitHub 自动跳过外部触发)
+# cron 仅作兜底,防止链断裂
 on:
   schedule:
-    - cron: '* * * * *'   # 每分钟触发;有运行在跑时 GitHub 自动跳过 → 实际为「连续不断」扫描
+    - cron: '*/30 * * * *'
   workflow_dispatch: {}
   push:
     branches:
       - main
 
+permissions:
+  contents: read
+  actions: write
+
 concurrency:
   group: scrape
-  cancel-in-progress: false  # 不取消在跑的轮次,让它们完整抓完
+  cancel-in-progress: false
 
 jobs:
   scrape:
@@ -19,7 +25,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 每个目标一台并行机器,总 wall time ≈ 单目标耗时
         target:
           - walmart
           - costco
@@ -60,3 +65,11 @@ jobs:
           INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
           ONLY_TARGET: ${{ matrix.target }}
         run: python scrape_targets.py
+
+      - name: 链式触发下一轮(持续扫描)
+        if: matrix.target == 'walmart' && !cancelled()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 90   # 休 90 秒再开下一轮,整体节奏约 5-10 分钟一轮
+          gh api -X POST "repos/${{ github.repository }}/actions/workflows/scrape.yml/dispatches" -f ref=main || echo "链式触发失败(cron 兜底)"

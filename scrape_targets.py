@@ -20,6 +20,7 @@ INGEST_TOKEN = os.environ.get('INGEST_TOKEN', '')
 
 MONEY = re.compile(r'\$\s*([0-9][0-9,]*(?:\.[0-9]{2})?)')
 ANCHOR = re.compile(r'<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]{10,600}?)</a>', re.I)
+PRICE_EL = re.compile(r'<([a-z0-9]+)\b[^>]*(?:class|data-testid)="[^"]*price[^"]*"[^>]*>([\s\S]{0,150}?)</\1>', re.I)
 CARD_SELECTORS = [
     '[data-item-id]',
     '[data-product-id]',
@@ -180,6 +181,27 @@ def get_html(page):
     return ''
 
 
+def extract_price_windows(html, page_url):
+    """第三层:定位渲染 DOM 中 class/testid 含 price 的元素,在 ±600 字符窗口内配对原价。
+    适合异步渲染的商品列表(Costco/CT/Simons 等),对 DOM 结构零假设。"""
+    deals, seen = [], set()
+    hits = [(m.start(), strip_tags(m.group(2))) for m in PRICE_EL.finditer(html)]
+    hits = [(pos, t) for pos, t in hits if len(MONEY.findall(t)) == 1]
+    for pos, t in hits:
+        window = html[max(0, pos - 600):pos + 600]
+        price, old = money_pairs(strip_tags(window))
+        if price is None:
+            continue
+        am = re.search(r'<a\b[^>]*href="([^"]+)"', window)
+        d = make_deal(strip_tags(window), am.group(1) if am else None, page_url)
+        if d and d['url'] not in seen:
+            seen.add(d['url'])
+            deals.append(d)
+        if len(deals) >= 40:
+            break
+    return deals
+
+
 def extract_cards(page, page_url):
     html = get_html(page)
     if not html:
@@ -236,6 +258,8 @@ def scrape_target(name, urls):
             continue
         print(f'[{name}] {u} 引擎={engine}')
         batch = extract_cards(page, u)
+        if not batch:
+            batch = extract_price_windows(get_html(page), u)  # 第三层:价格元素窗口配对
         print(f'[{name}] {u} -> {len(batch)} 候选')
         for d in batch:
             if len(all_deals) >= 40:
