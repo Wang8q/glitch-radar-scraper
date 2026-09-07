@@ -266,7 +266,7 @@ def main():
     targets = {only: TARGETS[only]} if only in TARGETS else TARGETS
 
     # 自检:隐身浏览器是否可用(与目标站无关)
-    diag = {}
+    diag = {'phase': 'start'}
     try:
         page = StealthyFetcher.fetch('https://example.com', headless=True, timeout=30000)
         diag['selftest'] = 'stealth ok, status ' + str(getattr(page, 'status', 0))
@@ -274,6 +274,13 @@ def main():
     except Exception as e:
         diag['selftest'] = f'FAIL {type(e).__name__}: {str(e)[:200]}'
         print('[selftest] 失败 →', diag['selftest'])
+
+    # 心跳诊断:立刻回传,就算后面挂了也能定位死点
+    try:
+        send('diag', {'source': 'diag', 'target': os.environ.get('ONLY_TARGET', 'all'),
+                      'deals': [], 'note': json.dumps(diag, ensure_ascii=False)})
+    except Exception as e:
+        print('[diag-心跳] 回传失败:', str(e)[:120])
 
     failed = 0
     for name, urls in targets.items():
@@ -289,8 +296,9 @@ def main():
             failed += 1
         time.sleep(5)
 
-    # 回传诊断(按目标分键,雷达面板可查;无变化不占额度)
+    # 回传最终诊断(按目标分键,雷达面板可查;无变化不占额度)
     try:
+        diag['phase'] = 'done'
         send('diag', {'source': 'diag', 'target': os.environ.get('ONLY_TARGET', 'all'),
                       'deals': [], 'note': json.dumps(diag, ensure_ascii=False)})
     except Exception as e:
