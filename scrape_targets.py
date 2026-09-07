@@ -181,19 +181,39 @@ def get_html(page):
     return ''
 
 
-def extract_price_windows(html, page_url):
-    """第三层:定位渲染 DOM 中 class/testid 含 price 的元素,在 ±600 字符窗口内配对原价。
-    适合异步渲染的商品列表(Costco/CT/Simons 等),对 DOM 结构零假设。"""
+def extract_price_elements(els, page_url):
+    """第三层:对渲染 DOM 中 class/testid 含 price 的元素,沿父链向上找最近的
+    「含 ≥2 个金额 + 链接」容器(即商品卡),交给 make_deal(自带多件装守卫)。"""
     deals, seen = [], set()
-    hits = [(m.start(), strip_tags(m.group(2))) for m in PRICE_EL.finditer(html)]
-    hits = [(pos, t) for pos, t in hits if len(MONEY.findall(t)) == 1]
-    for pos, t in hits:
-        window = html[max(0, pos - 600):pos + 600]
-        price, old = money_pairs(strip_tags(window))
-        if price is None:
+    for el in els:
+        try:
+            if len(MONEY.findall(el.text or '')) != 1:
+                continue
+        except Exception:
             continue
-        am = re.search(r'<a\b[^>]*href="([^"]+)"', window)
-        d = make_deal(strip_tags(window), am.group(1) if am else None, page_url)
+        node, container_text, link = el, '', None
+        for _ in range(4):
+            try:
+                node = node.parent
+            except Exception:
+                break
+            if node is None:
+                break
+            try:
+                atext = node.text or ''
+            except Exception:
+                break
+            if len(MONEY.findall(atext)) >= 2:
+                container_text = atext
+                try:
+                    a = node.css_first('a')
+                    link = (a.attrib or {}).get('href') if a is not None else None
+                except Exception:
+                    link = None
+                break
+        if not container_text:
+            continue
+        d = make_deal(container_text, [link] if link else [], page_url)
         if d and d['url'] not in seen:
             seen.add(d['url'])
             deals.append(d)
@@ -202,6 +222,12 @@ def extract_price_windows(html, page_url):
     return deals
 
 
+def extract_price_elements_page(page, page_url):
+    try:
+        els = page.css('[class*="price"],[data-testid*="price"]')
+    except Exception:
+        return []
+    return extract_price_elements(els, page_url)
 def extract_cards(page, page_url):
     html = get_html(page)
     if not html:
@@ -259,7 +285,7 @@ def scrape_target(name, urls):
         print(f'[{name}] {u} 引擎={engine}')
         batch = extract_cards(page, u)
         if not batch:
-            batch = extract_price_windows(get_html(page), u)  # 第三层:价格元素窗口配对
+            batch = extract_price_elements_page(page, u)  # 第三层:价格元素父链回溯
         print(f'[{name}] {u} -> {len(batch)} 候选')
         for d in batch:
             if len(all_deals) >= 40:
