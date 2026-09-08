@@ -38,11 +38,6 @@ TARGETS = {
         # DataDome 反爬,GHA 出口大概率 307→blocked;保留观察
         'https://www.walmart.ca/en/search?q=clearance',
     ],
-    'costco': [
-        'https://www.costco.ca/s?langId=-24&keyword=last+chance&sortBy=item_startDate%2Bdesc',
-        'https://www.costco.ca/s?langId=-24&keyword=last+chance',
-        'https://www.costco.ca/s?langId=-24&keyword=clearance',
-    ],
     'canadiantire': [
         'https://www.canadiantire.ca/en/promotions/clearance.html',
         'https://www.canadiantire.ca/en/promotions/clearance.html?page=2',
@@ -52,13 +47,6 @@ TARGETS = {
     'londondrugs': [
         # DataDome 反爬,最难啃;保留观察
         'https://www.londondrugs.com/on-sale',
-    ],
-    'amazon': [
-        # 试试 Amazon.ca:今日 Deals + clearance 低价搜索
-        'https://www.amazon.ca/gp/goldbox',
-        'https://www.amazon.ca/s?k=clearance&s=price-asc-rank',
-        'https://www.amazon.ca/s?k=deals&s=price-asc-rank',
-        'https://www.amazon.ca/s?k=outlet&s=price-asc-rank',
     ],
     'simons': [
         'https://www.simons.ca/en/sale',

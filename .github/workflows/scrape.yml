@@ -27,9 +27,9 @@ jobs:
       matrix:
         target:
           - walmart
-          - costco
           - canadiantire
           - londondrugs
+          - amazon
           - simons
           - sportinglife
           - mec
